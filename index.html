@@ -1,3 +1,13 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#F0EFEB" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111216" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="description" content="날짜를 고르면 그 요일에 여는 곳만 후보로 떠서, 점심부터 밤까지 하루 코스를 시간표로 만들어 주는 도구.">
 <title>하루 코스 빌더</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -40,7 +50,7 @@ h1,h2,h3{margin:0; text-wrap:balance;}
 p{margin:0;} ul{margin:0; padding:0; list-style:none;} button{font-family:inherit;}
 .wrap{ max-width:560px; margin:0 auto; padding-inline:18px; padding-block:22px 60px; }
 
-.bar{ display:flex; align-items:center; gap:8px; margin-bottom:8px; min-height:34px; }
+.bar{ display:flex; align-items:center; gap:8px; margin-bottom:8px; min-height:34px; flex-wrap:wrap; }
 .back{ width:30px; height:30px; flex:none; cursor:pointer; background:var(--surface);
   border:1px solid var(--rule); border-radius:8px; color:var(--muted);
   font-size:15px; line-height:1; display:grid; place-items:center; }
@@ -70,8 +80,9 @@ p{margin:0;} ul{margin:0; padding:0; list-style:none;} button{font-family:inheri
   padding:10px 12px; margin-bottom:6px; cursor:pointer; text-align:left; color:var(--ink); width:100%; }
 .saved-row:hover{ border-color:var(--faint); }
 .saved-row:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
-.saved-row .t1{ font-weight:600; font-size:14px; letter-spacing:-.015em; }
-.saved-row .t2{ font-size:12px; color:var(--faint); margin-top:1px; font-variant-numeric:tabular-nums; }
+.saved-row .t1{ display:block; font-weight:600; font-size:14px; letter-spacing:-.015em; overflow-wrap:anywhere; }
+.saved-row .t2{ display:block; font-size:12px; color:var(--faint); margin-top:1px; font-variant-numeric:tabular-nums; }
+.saved-row .side{ display:flex; align-items:center; }
 
 .q{ font-size:clamp(21px,5.6vw,26px); font-weight:700; letter-spacing:-.025em; line-height:1.3; }
 .q-sub{ margin-top:7px; font-size:13px; color:var(--muted); line-height:1.55; }
@@ -85,7 +96,7 @@ p{margin:0;} ul{margin:0; padding:0; list-style:none;} button{font-family:inheri
 .opt:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
 .opt .txt{ min-width:0; }
 .opt .hd{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-.opt .nm{ font-weight:600; font-size:15px; letter-spacing:-.015em; line-height:1.4; }
+.opt .nm{ font-weight:600; font-size:15px; letter-spacing:-.015em; line-height:1.4; overflow-wrap:anywhere; }
 .opt .meta{ display:block; font-size:12px; color:var(--faint); line-height:1.55; margin-top:1px; font-variant-numeric:tabular-nums; }
 .opt .side{ display:flex; align-items:center; gap:6px; flex:none; }
 .opt .mark{ width:20px; height:20px; border-radius:50%; border:1.5px solid var(--rule);
@@ -153,7 +164,7 @@ button.go.del:hover{ color:#B4482E; border-color:#B4482E; }
   border-radius:50%; background:var(--accent); box-shadow:0 0 0 3px var(--surface); }
 .stop.is-move .rail i{ width:6px; height:6px; margin-left:-3px; top:9px; background:var(--surface); border:2px solid var(--rail); box-shadow:none; }
 .stop .hd{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-.stop .nm{ font-weight:600; font-size:15px; letter-spacing:-.015em; line-height:1.4; }
+.stop .nm{ font-weight:600; font-size:15px; letter-spacing:-.015em; line-height:1.4; overflow-wrap:anywhere; }
 .stop .meta{ font-size:12px; color:var(--faint); line-height:1.55; font-variant-numeric:tabular-nums; margin-top:1px; }
 .stop.is-move .nm{ font-weight:500; font-size:13px; color:var(--muted); }
 .stop.is-move .t{ color:var(--faint); font-weight:500; }
@@ -167,8 +178,90 @@ button.go.del:hover{ color:#B4482E; border-color:#B4482E; }
 .tip a{ color:inherit; font-weight:600; text-decoration:none; border-bottom:1px solid currentColor; white-space:nowrap; font-variant-numeric:tabular-nums; }
 
 @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
-</style>
 
+/* ===== 모바일 ===== */
+@media (max-width: 460px){
+  body{ font-size:14.5px; }
+  .wrap{ padding-inline:14px; padding-block:14px 44px; }
+
+  .bar{ gap:6px; margin-bottom:7px; min-height:32px; }
+  .back{ width:32px; height:32px; }
+  #dateIn{ font-size:13px; padding:6px 7px; flex:0 1 auto; min-width:0; max-width:156px; }
+  .today{ font-size:11.5px; padding:6px 8px; }
+  .dow{ font-size:12.5px; }
+  .count{ font-size:11px; }
+  .bar-progress{ margin-bottom:11px; }
+  .wx{ font-size:12px; margin-bottom:13px; }
+
+  .q{ font-size:20.5px; line-height:1.28; }
+  .q-sub{ font-size:12.5px; margin-top:5px; }
+  .opts{ gap:6px; margin-top:14px; }
+
+  .opt{ padding:10px 10px 10px 12px; column-gap:6px; border-radius:9px; }
+  .opt .nm{ font-size:14.5px; }
+  .opt .meta{ font-size:11.5px; }
+  .opt .hd{ gap:5px; }
+  .kind{ font-size:10px; padding:1px 5px; }
+
+  .go{ width:30px; height:30px; font-size:13px; }
+  .opt .side{ gap:5px; }
+  .opt .mark{ width:19px; height:19px; }
+
+  .saved{ margin-bottom:17px; }
+  .saved-row{ padding:9px 11px; border-radius:9px; }
+  .saved-row .t1{ font-size:13.5px; }
+  .saved-row .t2{ font-size:11.5px; }
+
+  .tools{ flex-wrap:wrap; }
+  .addbtn{ padding:10px 12px; font-size:13px; }
+  .addbtn.slim{ font-size:12px; }
+
+  .form{ padding:11px 12px; gap:8px; }
+  .form .row{ grid-template-columns:1fr; gap:8px; }
+  .form input, .form select{ font-size:16px; padding:8px 9px; }
+  .dows{ gap:4px 9px; }
+  .dows label{ font-size:12.5px; }
+
+  .actions{ gap:7px; margin-top:13px; }
+  .btn{ padding:12px 12px; font-size:14px; border-radius:9px; }
+
+  .res-head{ margin-bottom:13px; }
+  .res-head h2{ font-size:21px; }
+  .res-head .range{ font-size:12.5px; }
+
+  .plan{ padding:8px 12px 12px; border-radius:11px; margin-bottom:11px; }
+  .stop{ grid-template-columns:40px 12px minmax(0,1fr) auto; column-gap:8px; padding-block:8px; }
+  .stop .t{ font-size:12px; }
+  .stop .nm{ font-size:14.5px; }
+  .stop .meta{ font-size:11.5px; }
+  .stop.is-move .nm{ font-size:12.5px; }
+
+  .tips{ gap:7px; margin-bottom:12px; }
+  .tip{ padding:10px 11px; font-size:12.5px; gap:8px; border-radius:8px; }
+  .tip .k{ font-size:10.5px; }
+}
+
+/* 아주 좁은 화면 */
+@media (max-width: 360px){
+  .wrap{ padding-inline:12px; }
+  .dow{ display:none; }
+  .q{ font-size:19.5px; }
+}
+
+/* 손가락으로 누르는 기기 — 링크·편집 버튼 탭 영역 확보 */
+@media (pointer: coarse){
+  .go{ position:relative; }
+  .go::after{ content:""; position:absolute; inset:-7px; }
+}
+</style>
+<style>
+:root{ padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
+html,body{ margin:0; }
+img{ max-width:100%; }
+[hidden]{ display:none !important; }
+</style>
+</head>
+<body>
 <div class="wrap">
   <div class="bar">
     <button class="back" id="back" aria-label="이전">&#8592;</button>
@@ -840,3 +933,6 @@ if (window.matchMedia) {
   });
 }
 </script>
+
+</body>
+</html>
