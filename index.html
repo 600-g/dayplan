@@ -1,0 +1,831 @@
+<title>하루 코스 빌더</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap">
+
+<style>
+:root{
+  --paper:#F0EFEB; --surface:#FFFFFF; --surface-2:#F7F6F3;
+  --ink:#16181D; --ink-2:#3D4149; --muted:#71757E; --faint:#9CA0A8;
+  --rule:#DCDAD3; --rail:#E2E0D9; --accent:#16181D;
+  --shadow:0 1px 2px rgba(22,24,29,.05), 0 8px 24px -16px rgba(22,24,29,.24);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111216; --surface:#1A1C21; --surface-2:#22252B;
+    --ink:#E9E8E4; --ink-2:#C3C5CA; --muted:#979BA3; --faint:#6E727A;
+    --rule:#2C2F36; --rail:#31353D; --accent:#E9E8E4;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.7);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111216; --surface:#1A1C21; --surface-2:#22252B;
+  --ink:#E9E8E4; --ink-2:#C3C5CA; --muted:#979BA3; --faint:#6E727A;
+  --rule:#2C2F36; --rail:#31353D; --accent:#E9E8E4;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.7);
+  color-scheme: dark;
+}
+
+*{box-sizing:border-box;}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+              "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  font-size:15px; line-height:1.6;
+  -webkit-font-smoothing:antialiased; -webkit-text-size-adjust:100%;
+}
+h1,h2,h3{margin:0; text-wrap:balance;}
+p{margin:0;} ul{margin:0; padding:0; list-style:none;} button{font-family:inherit;}
+.wrap{ max-width:560px; margin:0 auto; padding-inline:18px; padding-block:22px 60px; }
+
+.bar{ display:flex; align-items:center; gap:10px; margin-bottom:6px; min-height:32px; }
+.back{ width:30px; height:30px; flex:none; cursor:pointer; background:var(--surface);
+  border:1px solid var(--rule); border-radius:8px; color:var(--muted);
+  font-size:15px; line-height:1; display:grid; place-items:center; }
+.back:hover{ color:var(--ink); }
+.back:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
+.brand{ font-size:12.5px; font-weight:600; color:var(--faint); letter-spacing:-.01em; }
+.count{ margin-left:auto; font-size:11.5px; font-weight:600; color:var(--faint); font-variant-numeric:tabular-nums; }
+.bar-progress{ height:3px; background:var(--rule); border-radius:2px; overflow:hidden; margin-bottom:14px; }
+.bar-progress i{ display:block; height:100%; background:var(--accent); border-radius:2px; transition:width .25s ease; }
+
+.wx{ display:flex; gap:9px; align-items:baseline; flex-wrap:wrap; font-size:12.5px;
+  color:var(--muted); line-height:1.55; margin-bottom:20px; font-variant-numeric:tabular-nums; }
+.wx b{ font-weight:700; color:var(--ink-2); white-space:nowrap; }
+
+.q{ font-size:clamp(21px,5.6vw,26px); font-weight:700; letter-spacing:-.025em; line-height:1.3; }
+.q-sub{ margin-top:7px; font-size:13px; color:var(--muted); line-height:1.55; }
+.opts{ display:grid; gap:7px; margin-top:18px; }
+
+.opt{ cursor:pointer; text-align:left; color:var(--ink);
+  background:var(--surface); border:1px solid var(--rule); border-radius:10px;
+  padding:11px 12px 11px 14px; display:grid; grid-template-columns:1fr auto;
+  align-items:center; column-gap:8px; transition:border-color .14s, background .14s; }
+.opt:hover{ border-color:var(--faint); }
+.opt:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.opt .txt{ min-width:0; }
+.opt .hd{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.opt .nm{ font-weight:600; font-size:15px; letter-spacing:-.015em; line-height:1.4; }
+.opt .meta{ display:block; font-size:12px; color:var(--faint); line-height:1.55; margin-top:1px; font-variant-numeric:tabular-nums; }
+.opt .side{ display:flex; align-items:center; gap:6px; flex:none; }
+.opt .mark{ width:20px; height:20px; border-radius:50%; border:1.5px solid var(--rule);
+  display:grid; place-items:center; color:transparent; font-size:11px; font-weight:700; }
+.opt.on{ border-color:var(--accent); background:var(--surface-2); }
+.opt.on .mark{ background:var(--accent); border-color:var(--accent); color:var(--surface); }
+.opt .dot{ width:9px; height:9px; border-radius:50%; background:var(--swatch, var(--rail)); flex:none; margin-right:2px; }
+
+.kind{ font-size:10.5px; font-weight:700; padding:1px 6px; border-radius:4px;
+  background:var(--surface-2); color:var(--muted); white-space:nowrap; letter-spacing:.01em; }
+.opt.on .kind{ background:var(--surface); }
+.kind.warn{ box-shadow:inset 0 0 0 1px var(--rule); }
+
+.go{ width:26px; height:26px; flex:none; border-radius:7px; display:grid; place-items:center;
+  border:1px solid var(--rule); background:var(--surface); color:var(--muted);
+  font-size:12px; text-decoration:none; line-height:1; }
+.go:hover{ color:var(--ink); border-color:var(--faint); }
+.go:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+.tools{ display:flex; gap:7px; }
+.addbtn{ cursor:pointer; text-align:left; flex:1; color:var(--muted);
+  background:transparent; border:1px dashed var(--rule); border-radius:10px;
+  padding:11px 14px; font-size:13.5px; font-weight:600; }
+.addbtn.slim{ flex:0 0 auto; text-align:center; font-size:12.5px; color:var(--faint); }
+.addbtn:hover{ color:var(--ink); border-color:var(--faint); }
+.addbtn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.opt.gone{ opacity:.42; }
+.opt.gone .nm{ text-decoration:line-through; }
+button.go{ cursor:pointer; }
+button.go.del:hover{ color:#B4482E; border-color:#B4482E; }
+
+.form{ background:var(--surface); border:1px solid var(--rule); border-radius:10px;
+  padding:13px 14px; display:grid; gap:9px; }
+.form .row{ display:grid; gap:9px; grid-template-columns:1fr 1fr; }
+.form label{ display:grid; gap:3px; font-size:11.5px; font-weight:600; color:var(--faint); }
+.form input, .form select{ font-family:inherit; font-size:14px; padding:8px 10px;
+  border-radius:7px; border:1px solid var(--rule); background:var(--paper); color:var(--ink); width:100%; }
+.form input:focus-visible, .form select:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
+.form .msg{ font-size:12px; color:var(--muted); }
+
+.actions{ display:flex; gap:8px; margin-top:16px; }
+.btn{ flex:1; cursor:pointer; border-radius:10px; padding:12px 16px;
+  font-size:14.5px; font-weight:600; letter-spacing:-.015em;
+  border:1px solid var(--accent); background:var(--accent); color:var(--paper); }
+.btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.btn.ghost{ background:var(--surface); color:var(--ink); border-color:var(--rule); }
+.btn.ghost:hover{ border-color:var(--faint); }
+
+.res-head{ margin-bottom:16px; }
+.res-head .zone{ font-size:12.5px; font-weight:700; color:var(--accent); }
+.res-head h2{ font-size:clamp(22px,5.6vw,27px); font-weight:700; letter-spacing:-.025em; margin-top:4px; }
+.res-head .range{ margin-top:5px; font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums; }
+
+.plan{ background:var(--surface); border:1px solid var(--rule); border-radius:12px;
+  box-shadow:var(--shadow); padding:10px 15px 15px; margin-bottom:14px; }
+.stop{ display:grid; grid-template-columns:44px 14px minmax(0,1fr) auto; column-gap:10px; padding-block:9px; align-items:start; }
+.stop .t{ font-size:12.5px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--ink-2); padding-top:3px; letter-spacing:-.02em; }
+.stop .rail{ position:relative; }
+.stop .rail::before{ content:""; position:absolute; left:50%; top:0; bottom:-9px; width:2px; margin-left:-1px; background:var(--rail); }
+.stop:last-child .rail::before{ bottom:auto; height:8px; }
+.stop .rail i{ position:absolute; left:50%; top:7px; width:9px; height:9px; margin-left:-4.5px;
+  border-radius:50%; background:var(--accent); box-shadow:0 0 0 3px var(--surface); }
+.stop.is-move .rail i{ width:6px; height:6px; margin-left:-3px; top:9px; background:var(--surface); border:2px solid var(--rail); box-shadow:none; }
+.stop .hd{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.stop .nm{ font-weight:600; font-size:15px; letter-spacing:-.015em; line-height:1.4; }
+.stop .meta{ font-size:12px; color:var(--faint); line-height:1.55; font-variant-numeric:tabular-nums; margin-top:1px; }
+.stop.is-move .nm{ font-weight:500; font-size:13px; color:var(--muted); }
+.stop.is-move .t{ color:var(--faint); font-weight:500; }
+
+.tips{ display:grid; gap:8px; margin-bottom:14px; }
+.tip{ display:grid; grid-template-columns:auto 1fr; gap:9px; align-items:start;
+  font-size:13px; line-height:1.55; color:var(--ink-2);
+  background:var(--surface-2); border:1px solid var(--rule); border-radius:9px; padding:11px 13px; }
+.tip .k{ font-size:11px; font-weight:700; color:var(--faint); padding-top:2px; white-space:nowrap; }
+.tip b{ font-weight:700; }
+.tip a{ color:inherit; font-weight:600; text-decoration:none; border-bottom:1px solid currentColor; white-space:nowrap; font-variant-numeric:tabular-nums; }
+
+@media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+
+<div class="wrap">
+  <div class="bar">
+    <button class="back" id="back" aria-label="이전">&#8592;</button>
+    <span class="brand" id="brand">하루 코스 빌더</span>
+    <span class="count" id="count"></span>
+  </div>
+  <div class="bar-progress"><i id="prog"></i></div>
+  <div class="wx" id="wx"></div>
+  <div id="stage"></div>
+</div>
+
+<script>
+/* ===== 기본값 — DB(meta/day)가 있으면 그쪽이 우선 ===== */
+const DAY_FALLBACK = { label:"9/24 목", weather:"구름많음 · 18° / 26° · 비 적음" };
+let DAY = { ...DAY_FALLBACK };
+
+const KIND = { meal:"음식점", cafe:"카페", movie:"영화관", art:"전시", park:"공원",
+  walk:"산책", shop:"소품샵", market:"시장", bar:"술집", snack:"간식", play:"놀거리", none:"" };
+
+const MOVIES = [
+  { nm:"어벤저스", meta:"약 3시간", dur:180, first:true },
+  { nm:"인턴",     meta:"약 2시간 10분", dur:130 },
+  { nm:"오디세이", meta:"약 2시간 40분", dur:160 },
+  { nm:"영화 안 봄", meta:"", dur:0 }
+];
+
+/* dur = 머무는 시간(분), m = 직전 장소에서의 이동(분), n = 짧은 메모, u = 영업시간 미확인 */
+const ZONES = [
+  { id:"hongdae", nm:"홍대·연남", c:"#00A84D", cd:"#3ECB7C",
+    meet:"홍대입구역 3번출구", cine:"CGV 홍대", cm:12,
+    lunch:[
+      { k:"meal", nm:"스프카레 카무이", h:"매일 11:30–21:00", dur:70, tip:"call" },
+      { k:"meal", nm:"히포브런치하우스 연남", h:"매일 09:00–21:30", dur:70 },
+      { k:"meal", nm:"브런치카페 잼잼", h:"목 10:00–21:00", dur:70 }
+    ],
+    day:[
+      { k:"play", nm:"50PAGE", h:"매일 11:00–23:00", dur:50, m:5, n:"플립북", tip:"call" },
+      { k:"walk", nm:"경의선숲길", h:"상시", dur:40, m:10 },
+      { k:"cafe", nm:"도트블랭킷 연남", h:"매일 09:30–20:00", dur:60, m:10 },
+      { k:"play", nm:"홍대 만화카페", h:"현장 확인", dur:60, m:10, u:true }
+    ],
+    dinner:[
+      { k:"meal", nm:"야키토리 코코 연남", h:"매일 17:00–01:00", dur:90, m:15, n:"웨이팅" },
+      { k:"meal", nm:"야키토리 묵", h:"목 17:00–22:00", dur:90, m:15, n:"예약 권장" },
+      { k:"meal", nm:"더심플테이블 메세나폴리스", h:"매일 11:00–22:00", dur:80, m:15 }
+    ],
+    night:[
+      { k:"bar", nm:"나카스 하이볼클럽", h:"매일 17:00–01:00", dur:90, m:8 },
+      { k:"bar", nm:"바 결", h:"목 19:00–02:00", dur:90, m:8 },
+      { k:"none", nm:"바로 해산", h:"", dur:0, m:0 }
+    ] },
+
+  { id:"yeonhui", nm:"연희동", c:"#7B5EA7", cd:"#A98BD4",
+    meet:"사러가쇼핑센터 앞", cine:"CGV 홍대", cm:15,
+    lunch:[
+      { k:"meal", nm:"Laa 라", h:"목 12:00–15:00", dur:80, n:"예약 권장" },
+      { k:"meal", nm:"연희루이지", h:"영업시간 미등록", dur:75, u:true, tip:"unver" },
+      { k:"meal", nm:"랄라루들", h:"영업시간 미등록", dur:70, u:true, tip:"unver" },
+      { k:"meal", nm:"파파", h:"매일 11:00–22:00", dur:65 }
+    ],
+    day:[
+      { k:"art", nm:"박서보미술관", h:"목 11:00–18:00", dur:70, m:12 },
+      { k:"art", nm:"연희정음", h:"목 11:00–18:00", dur:50, m:8 },
+      { k:"shop", nm:"오자크래프트", h:"목 13:00–19:00", dur:40, m:5 },
+      { k:"cafe", nm:"연희에스프레소바", h:"영업시간 미등록", dur:50, m:5, u:true, tip:"unver" },
+      { k:"shop", nm:"파파연희", h:"영업시간 미등록", dur:30, m:5, u:true, tip:"unver" },
+      { k:"market", nm:"사러가쇼핑센터", h:"매일 10:00–22:00", dur:40, m:5 }
+    ],
+    dinner:[
+      { k:"meal", nm:"Laa 라", h:"목 17:00–22:00", dur:90, m:8, n:"예약 권장" },
+      { k:"meal", nm:"연희루이지", h:"영업시간 미등록", dur:85, m:8, u:true, tip:"unver" },
+      { k:"meal", nm:"랄라루들", h:"영업시간 미등록", dur:80, m:8, u:true, tip:"unver" },
+      { k:"meal", nm:"연남으로 넘어가서 저녁", h:"", dur:90, m:15 }
+    ],
+    night:[
+      { k:"cafe", nm:"연희에스프레소바", h:"영업시간 미등록", dur:50, m:5, u:true, tip:"unver" },
+      { k:"bar", nm:"연남에서 한잔", h:"", dur:90, m:15 },
+      { k:"none", nm:"바로 해산", h:"", dur:0, m:0 }
+    ] },
+
+  { id:"anguk", nm:"안국·익선", c:"#EF7C1C", cd:"#F59B4D",
+    meet:"안국역 3번출구", cine:"CGV 피카디리1958", cm:10,
+    lunch:[
+      { k:"meal", nm:"온정옥 익선동", h:"목 10:30–21:00", dur:70 },
+      { k:"meal", nm:"익선요록", h:"매일 12:00–22:00", dur:70 },
+      { k:"meal", nm:"삼청동수제비", h:"매일 11:00–20:00", dur:65, n:"웨이팅" }
+    ],
+    day:[
+      { k:"art", nm:"창덕궁", h:"무료 · 09:00–18:00", dur:70, m:12, tip:"palace" },
+      { k:"art", nm:"경복궁", h:"무료 · 입장 마감 17:00", dur:80, m:15, tip:"palace" },
+      { k:"art", nm:"종묘", h:"무료 · 09:00–18:00", dur:50, m:10, tip:"palace" },
+      { k:"cafe", nm:"순라길 비비", h:"매일 11:00–23:00", dur:60, m:10 },
+      { k:"cafe", nm:"FOWS 삼청", h:"목 11:00–20:00", dur:60, m:12, n:"루프탑" },
+      { k:"walk", nm:"북촌한옥마을", h:"상시", dur:40, m:12 }
+    ],
+    dinner:[
+      { k:"meal", nm:"익선요록", h:"매일 12:00–22:00", dur:90, m:12 },
+      { k:"meal", nm:"메종드파리 익선동", h:"목 17:00–22:00", dur:90, m:12, n:"예약 권장" },
+      { k:"bar", nm:"풍기 POONGI", h:"목 17:00–24:00", dur:90, m:10, n:"와인바+안주" }
+    ],
+    night:[
+      { k:"bar", nm:"오브오브라이트", h:"목 12:00–24:00", dur:90, m:8 },
+      { k:"bar", nm:"새서울 Saeseoul", h:"매일 17:00–01:00", dur:90, m:8, n:"루프탑" },
+      { k:"bar", nm:"이장수라운지", h:"목 17:00–24:00", dur:90, m:8 },
+      { k:"none", nm:"바로 해산", h:"", dur:0, m:0 }
+    ] },
+
+  { id:"hapjeong", nm:"합정·망원", c:"#CD7C2F", cd:"#E09A55",
+    meet:"망원역 2번출구", cine:"CGV 홍대", cm:12,
+    lunch:[
+      { k:"meal", nm:"헤키", h:"목 11:30–15:00", dur:75, n:"오픈런" },
+      { k:"meal", nm:"악어마끼", h:"매일 12:00–21:00", dur:70 },
+      { k:"market", nm:"망원시장 먹거리 + 카페엠", h:"카페 영업시간 미등록", dur:80, u:true, tip:"market" },
+      { k:"meal", nm:"담밀 김치찌개 합정", h:"매일 11:00–21:00", dur:65 },
+      { k:"meal", nm:"더심플테이블 메세나폴리스", h:"매일 11:00–22:00", dur:70 }
+    ],
+    day:[
+      { k:"shop", nm:"버섯이네 잡화점", h:"목 13:00–19:00", dur:40, m:8 },
+      { k:"snack", nm:"원당가마솥찰옥수수", h:"매일 10:00–19:30", dur:25, m:5, tip:"market" },
+      { k:"snack", nm:"망원 고로케", h:"목 09:00–21:00", dur:25, m:5, tip:"market" },
+      { k:"park", nm:"망원한강공원", h:"상시", dur:80, m:12, tip:"river" },
+      { k:"cafe", nm:"코리야 망원점", h:"영업시간 미등록", dur:40, m:6, u:true, tip:"unver" },
+      { k:"cafe", nm:"말라카이트 망원", h:"목 12:00–21:50", dur:40, m:8, n:"젤라또" },
+      { k:"cafe", nm:"센트럴사이트 합정", h:"목 08:00–22:00", dur:60, m:10 },
+      { k:"cafe", nm:"픽트로스터리 망원", h:"목 11:00–19:00", dur:60, m:8 }
+    ],
+    dinner:[
+      { k:"meal", nm:"정각 망원본점", h:"목 16:00–23:00", dur:90, m:12, n:"고깃집" },
+      { k:"meal", nm:"악어마끼", h:"매일 12:00–21:00", dur:80, m:10 },
+      { k:"meal", nm:"더심플테이블 메세나폴리스", h:"매일 11:00–22:00", dur:85, m:15 },
+      { k:"meal", nm:"오시 망원본점", h:"매일 11:30–22:00", dur:85, m:12, n:"오코노미야키" }
+    ],
+    night:[
+      { k:"park", nm:"망원한강공원", h:"상시", dur:60, m:12, tip:"river" },
+      { k:"cafe", nm:"카페엠", h:"영업시간 미등록", dur:60, m:8, u:true, tip:"unver" },
+      { k:"none", nm:"바로 해산", h:"", dur:0, m:0 }
+    ] },
+
+  { id:"yongsan", nm:"용산", c:"#00A5DE", cd:"#4CC4EE",
+    meet:"신용산역 1번출구", cine:"CGV 용산아이파크몰", cm:8,
+    lunch:[
+      { k:"meal", nm:"먼치 Munch", h:"목 11:30–15:00", dur:75 },
+      { k:"meal", nm:"멘야서울 아이파크몰", h:"매일 11:00–21:00", dur:60 }
+    ],
+    day:[
+      { k:"cafe", nm:"테디뵈르하우스", h:"매일 10:00–22:00", dur:60, m:8 },
+      { k:"cafe", nm:"바게티 Bagetti", h:"목 11:00–20:00", dur:60, m:8 },
+      { k:"cafe", nm:"파이인더샵 용산", h:"매일 11:30–20:30", dur:60, m:8 },
+      { k:"park", nm:"용산공원 부분개방부지", h:"화~토 09:00–18:00", dur:70, m:20 },
+      { k:"walk", nm:"용리단길 골목", h:"상시", dur:40, m:5 }
+    ],
+    dinner:[
+      { k:"meal", nm:"바스버거 신용산", h:"목 11:00–21:30", dur:80, m:10 },
+      { k:"meal", nm:"타파코파 Tapa Copa", h:"매일 16:30–22:30", dur:90, m:10, n:"예약 권장" },
+      { k:"meal", nm:"홍대개미 아이파크몰", h:"매일 11:00–22:00", dur:70, m:8 }
+    ],
+    night:[
+      { k:"bar", nm:"콤피 삼각지 Komfy", h:"매일 12:00–24:00", dur:90, m:10 },
+      { k:"bar", nm:"드포레 De,fore", h:"목 17:00–24:00", dur:90, m:12 },
+      { k:"none", nm:"바로 해산", h:"", dur:0, m:0 }
+    ] },
+
+  { id:"ydp", nm:"영등포·여의도", c:"#0052A4", cd:"#5B93D6",
+    meet:"영등포역 · 타임스퀘어", cine:"CGV 영등포", cm:3,
+    lunch:[
+      { k:"meal", nm:"무월식탁 타임스퀘어", h:"목 11:00–22:00", dur:70 },
+      { k:"meal", nm:"더플레이스 타임스퀘어", h:"매일 11:00–22:00", dur:70 },
+      { k:"meal", nm:"봉혜자네주방 타임스퀘어", h:"목 11:00–22:00", dur:70 }
+    ],
+    day:[
+      { k:"cafe", nm:"수수커피 여의도", h:"목 07:30–21:20", dur:60, m:15 },
+      { k:"cafe", nm:"카페 미뇽 여의도", h:"매일 07:00–22:00", dur:60, m:15 },
+      { k:"shop", nm:"교보문고 타임스퀘어", h:"매일 10:30–22:00", dur:40, m:5 },
+      { k:"walk", nm:"여의도공원", h:"상시", dur:50, m:15 },
+      { k:"park", nm:"여의도한강공원", h:"상시", dur:80, m:15, tip:"river" }
+    ],
+    dinner:[
+      { k:"meal", nm:"마마리다이닝 IFC몰", h:"목 17:00–22:00", dur:85, m:15 },
+      { k:"meal", nm:"온더보더 IFC몰", h:"매일 11:00–22:00", dur:85, m:15 },
+      { k:"meal", nm:"무월식탁 타임스퀘어", h:"목 11:00–22:00", dur:85, m:3 },
+      { k:"market", nm:"한강 치맥·라면", h:"상시", dur:80, m:15, tip:"river" }
+    ],
+    night:[
+      { k:"park", nm:"여의나루 야경", h:"상시", dur:50, m:10 },
+      { k:"cafe", nm:"카페 미뇽 여의도", h:"매일 07:00–22:00", dur:60, m:10 },
+      { k:"none", nm:"바로 해산", h:"", dur:0, m:0 }
+    ] }
+];
+
+const TIPS = {
+  palace:{ k:"고궁", html:"4대궁·종묘·왕릉 <b>9/24~27 무료개방</b>. 종묘는 예약 없이 자유관람, 창덕궁 후원만 제외." },
+  call:  { k:"확인", html:"연휴 휴무 미확인. 카무이 <a href=\"tel:050713192190\">0507-1319-2190</a> · 50PAGE <a href=\"tel:050714333959\">0507-1433-3959</a>" },
+  river: { k:"한강", html:"일몰 <b>18:20</b> 전후. 밤 18도 안팎 — 겉옷 챙겨." },
+  unver: { k:"미확인", html:"구글에 영업시간이 없는 곳. 네이버·인스타로 당일 확인하고 가." },
+  market:{ k:"시장", html:"추석 전날 망원시장은 대목. 먹거리만 사서 <b>카페엠</b>으로 빠지면 편해 — 음료 1인 1잔 주문 시 반입 가능." }
+};
+
+/* ===== state ===== */
+const STEPS = ["zone","lunch","day","movie","dinner","night"];
+const SLOTS = { lunch:"점심", day:"낮 활동", dinner:"저녁", night:"마무리" };
+const KEY_OF = (o, zoneId, slot) => o.id ? "db:" + o.id : `b:${zoneId}:${slot}:${o.nm}`;
+const QUESTIONS = {
+  zone:{ q:"어디서 만날까?" },
+  lunch:{ q:"점심은?", sub:"12시에 만나서 바로 밥." },
+  day:{ q:"낮에 뭐 할까?", sub:"최대 2개. 안 골라도 돼." },
+  movie:{ q:"영화는?", sub:"러닝타임은 가정값이야." },
+  dinner:{ q:"저녁은?" },
+  night:{ q:"저녁 먹고는?" }
+};
+
+let step = 0;
+let sel = { zone:null, lunch:null, day:[], movie:null, dinner:null, night:null };
+let extra = [];          // DB에 추가한 장소
+let hidden = [];         // DB에 숨긴 기본 장소 (키 문자열)
+let db = null;
+let formOpen = false;
+let editMode = false;
+let editKey = null;
+const blankSel = () => ({ zone:null, lunch:null, day:[], movie:null, dinner:null, night:null });
+
+/* DB가 없을 때(단독 HTML·GitHub Pages) 쓰는 브라우저 저장소 */
+const LS = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+};
+const saveLocal = () => { LS.set("dayplan.extra", extra); LS.set("dayplan.hidden", hidden); };
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const isDark = () => {
+  const t = document.documentElement.getAttribute("data-theme");
+  if (t === "dark") return true;
+  if (t === "light") return false;
+  return !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+};
+const accentOf = z => isDark() ? z.cd : z.c;
+const fmt = m => `${String(Math.floor(m/60)%24).padStart(2,"0")}:${String(m%60).padStart(2,"0")}`;
+const lenOf = m => m >= 60 ? (m%60 ? `${Math.floor(m/60)}시간 ${m%60}분` : `${Math.floor(m/60)}시간`) : `${m}분`;
+/* 지역 기본 접두어 — 이름만 검색하면 엉뚱한 지역이 떠서 붙인다 */
+const AREA = { hongdae:"연남동", yeonhui:"연희동", anguk:"익선동",
+               hapjeong:"망원동", yongsan:"용리단길", ydp:"영등포" };
+
+/* 기본 접두어로 안 잡히는 곳은 검색어를 직접 지정 */
+const QFIX = {
+  "히포브런치하우스 연남":"연남동 히포브런치하우스",
+  "브런치카페 잼잼":"연남동 잼잼",
+  "50PAGE":"연남동 50페이지",
+  "경의선숲길":"경의선숲길 연남동",
+  "도트블랭킷 연남":"연남동 도트블랭킷",
+  "홍대 만화카페":"홍대입구역 만화카페",
+  "야키토리 코코 연남":"연남동 야키토리 코코",
+  "바 결":"연남동 바결",
+  "더심플테이블 메세나폴리스":"메세나폴리스 더심플테이블",
+
+  "Laa 라":"연희동 라 Laa",
+  "연희루이지":"연희동 루이지",
+  "박서보미술관":"박서보미술관",
+  "연희정음":"연희정음",
+  "연희에스프레소바":"연희에스프레소바",
+  "파파연희":"파파연희 레코드",
+  "사러가쇼핑센터":"사러가쇼핑센터 연희점",
+  "연남으로 넘어가서 저녁":"연남동 맛집",
+  "연남에서 한잔":"연남동 술집",
+
+  "온정옥 익선동":"익선동 온정옥",
+  "삼청동수제비":"삼청동수제비",
+  "창덕궁":"창덕궁", "경복궁":"경복궁", "종묘":"종묘",
+  "순라길 비비":"서순라길 비비",
+  "FOWS 삼청":"삼청동 FOWS",
+  "북촌한옥마을":"북촌한옥마을",
+  "메종드파리 익선동":"익선동 메종드파리",
+  "풍기 POONGI":"서순라길 풍기",
+  "오브오브라이트":"서순라길 오브오브라이트",
+  "새서울 Saeseoul":"익선동 새서울",
+  "이장수라운지":"익선동 이장수라운지",
+
+  "망원시장 먹거리 + 카페엠":"망원시장",
+  "담밀 김치찌개 합정":"합정 담밀 김치찌개",
+  "버섯이네 잡화점":"망원동 버섯이네 잡화점",
+  "원당가마솥찰옥수수":"망원시장 원당가마솥찰옥수수",
+  "망원 고로케":"망원시장 고로케",
+  "망원한강공원":"망원한강공원",
+  "코리야 망원점":"망원동 코리야",
+  "말라카이트 망원":"망원동 말라카이트",
+  "센트럴사이트 합정":"합정 센트럴사이트",
+  "픽트로스터리 망원":"망원동 픽트로스터리",
+  "정각 망원본점":"망원동 정각",
+  "오시 망원본점":"망원동 오시",
+  "카페엠":"망원시장 카페엠",
+
+  "먼치 Munch":"용리단길 먼치",
+  "멘야서울 아이파크몰":"용산 아이파크몰 멘야서울",
+  "테디뵈르하우스":"용산 테디뵈르하우스",
+  "바게티 Bagetti":"용산 바게티",
+  "파이인더샵 용산":"용산 파이인더샵",
+  "용산공원 부분개방부지":"용산공원 부분개방부지",
+  "용리단길 골목":"용리단길",
+  "바스버거 신용산":"신용산 바스버거",
+  "타파코파 Tapa Copa":"용산 타파코파",
+  "홍대개미 아이파크몰":"용산 아이파크몰 홍대개미",
+  "콤피 삼각지 Komfy":"삼각지 콤피",
+  "드포레 De,fore":"용산 드포레",
+
+  "무월식탁 타임스퀘어":"타임스퀘어 무월식탁",
+  "더플레이스 타임스퀘어":"타임스퀘어 더플레이스",
+  "봉혜자네주방 타임스퀘어":"타임스퀘어 봉혜자네주방",
+  "수수커피 여의도":"여의도 수수커피",
+  "카페 미뇽 여의도":"여의도 카페미뇽",
+  "교보문고 타임스퀘어":"타임스퀘어 교보문고",
+  "여의도공원":"여의도공원",
+  "여의도한강공원":"여의도한강공원",
+  "마마리다이닝 IFC몰":"IFC몰 마마리다이닝",
+  "온더보더 IFC몰":"IFC몰 온더보더",
+  "한강 치맥·라면":"여의도한강공원 편의점",
+  "여의나루 야경":"여의나루역"
+};
+
+function searchQ(o, zoneId){
+  if (o.q) return o.q;
+  if (QFIX[o.nm]) return QFIX[o.nm];
+  const a = AREA[zoneId];
+  if (!a) return o.nm;
+  return o.nm.indexOf(a) > -1 ? o.nm : a + " " + o.nm;
+}
+const mapUrl = q => "https://map.naver.com/p/search/" + encodeURIComponent(q);
+
+function listFor(slot, all){
+  if (sel.zone === null) return [];
+  const z = ZONES[sel.zone];
+  const mine = extra.filter(p => p.zone === z.id && p.slot === slot);
+  const rows = z[slot].concat(mine).map(o => {
+    const key = KEY_OF(o, z.id, slot);
+    return Object.assign({}, o, { key, hid: hidden.indexOf(key) > -1 });
+  });
+  return all ? rows : rows.filter(o => !o.hid);
+}
+function findByKey(slot, key){
+  if (!key) return null;
+  return listFor(slot, true).filter(o => o.key === key)[0] || null;
+}
+function setAccent(){
+  const root = document.documentElement;
+  if (sel.zone === null) root.style.removeProperty("--accent");
+  else root.style.setProperty("--accent", accentOf(ZONES[sel.zone]));
+}
+function metaOf(o){
+  return [o.n, o.h, o.dur ? lenOf(o.dur) : ""].filter(Boolean).join(" · ");
+}
+
+/* ===== render ===== */
+function renderHead(){
+  $("brand").textContent = `${DAY.label} · 하루 코스`;
+  $("wx").innerHTML = `<b>날씨</b><span>${esc(DAY.weather)}</span>`;
+}
+
+function render(){
+  setAccent(); renderHead();
+  const key = STEPS[step];
+  $("count").textContent = `${step+1} / ${STEPS.length}`;
+  $("prog").style.width = `${step / STEPS.length * 100}%`;
+  $("back").style.visibility = step === 0 ? "hidden" : "visible";
+
+  const Q = QUESTIONS[key];
+  const multi = key === "day";
+  let rows = "";
+
+  if (key === "zone"){
+    rows = ZONES.map((z,i) => `
+      <button class="opt${sel.zone===i?" on":""}" data-k="${i}" style="--swatch:${accentOf(z)}">
+        <span class="txt"><span class="hd"><span class="dot"></span><span class="nm">${esc(z.nm)}</span></span></span>
+        <span class="side"></span>
+      </button>`).join("");
+  } else if (key === "movie"){
+    rows = MOVIES.map((m,i) => `
+      <button class="opt${sel.movie===i?" on":""}" data-k="${i}">
+        <span class="txt">
+          <span class="hd"><span class="nm">${esc(m.nm)}</span>${m.first?'<span class="kind">1순위</span>':""}</span>
+          ${m.meta?`<span class="meta">${esc(m.meta)}</span>`:""}
+        </span>
+        <span class="side"></span>
+      </button>`).join("");
+  } else {
+    const zid = ZONES[sel.zone].id;
+    const items = listFor(key, editMode);
+    rows = items.map(o => {
+      const on = multi ? sel.day.includes(o.key) : sel[key] === o.key;
+      const kl = KIND[o.k] || o.k || "";
+      const link = (o.k && o.k !== "none")
+        ? `<a class="go" href="${esc(mapUrl(searchQ(o, zid)))}" target="_blank" rel="noopener" aria-label="${esc(o.nm)} 지도">↗</a>` : "";
+      const edit = editMode
+        ? (o.hid
+            ? `<button class="go undo" data-undo="${esc(o.key)}" aria-label="되살리기">↺</button>`
+            : `<button class="go" data-edit="${esc(o.key)}" aria-label="고치기">✎</button>`
+              + `<button class="go del" data-del="${esc(o.key)}" data-id="${esc(o.id||"")}" aria-label="빼기">✕</button>`)
+        : "";
+      return `<button class="opt${on?" on":""}${o.hid?" gone":""}" data-k="${esc(o.key)}">
+        <span class="txt">
+          <span class="hd">${kl?`<span class="kind${o.u?" warn":""}">${esc(kl)}</span>`:""}<span class="nm">${esc(o.nm)}</span></span>
+          ${metaOf(o)?`<span class="meta">${esc(metaOf(o))}</span>`:""}
+        </span>
+        <span class="side">${link}${edit}${(multi&&!editMode)?'<span class="mark">&#10003;</span>':""}</span>
+      </button>`;
+    }).join("");
+    rows += formOpen ? formHtml(key, editKey ? findByKey(key, editKey) : null)
+      : `<div class="tools">
+           <button class="addbtn" id="openForm">＋ 직접 추가</button>
+           <button class="addbtn slim" id="editTog">${editMode?"편집 끝":"고치기 · 빼기"}</button>
+         </div>`;
+  }
+
+  $("stage").innerHTML = `
+    <h1 class="q">${esc(Q.q)}</h1>
+    ${Q.sub?`<p class="q-sub">${esc(Q.sub)}</p>`:""}
+    ${editMode&&key!=="zone"&&key!=="movie"?'<p class="q-sub">✎ 로 고치고, ✕ 로 목록에서 빼. ↺ 는 되살리기.</p>':""}
+    <div class="opts">${rows}</div>
+    ${(multi&&!editMode)?`<div class="actions"><button class="btn" id="next">다음</button></div>`:""}`;
+
+  document.querySelectorAll(".opt").forEach(b => {
+    b.addEventListener("click", e => {
+      if (e.target.closest(".go")) return;
+      if (editMode) return;
+      const k = b.dataset.k;
+      if (key === "zone"){
+        const i = +k;
+        if (sel.zone !== i){ sel = blankSel(); sel.zone = i; }
+        formOpen = false; advance(); return;
+      }
+      if (key === "movie"){ sel.movie = +k; formOpen = false; advance(); return; }
+      if (multi){
+        const at = sel.day.indexOf(k);
+        if (at > -1) sel.day.splice(at,1); else if (sel.day.length < 2) sel.day.push(k);
+        render();
+      } else { sel[key] = k; formOpen = false; advance(); }
+    });
+  });
+  document.querySelectorAll("[data-del]").forEach(b => {
+    b.addEventListener("click", e => { e.stopPropagation(); removeItem(b.dataset.del, b.dataset.id); });
+  });
+  document.querySelectorAll("[data-undo]").forEach(b => {
+    b.addEventListener("click", e => { e.stopPropagation(); restoreItem(b.dataset.undo); });
+  });
+  document.querySelectorAll("[data-edit]").forEach(b => {
+    b.addEventListener("click", e => { e.stopPropagation(); editKey = b.dataset.edit; formOpen = true; render(); });
+  });
+  if (multi && !editMode && $("next")) $("next").addEventListener("click", advance);
+  if ($("openForm")) $("openForm").addEventListener("click", () => { editKey = null; formOpen = true; render(); });
+  if ($("editTog")) $("editTog").addEventListener("click", () => { editMode = !editMode; editKey = null; formOpen = false; render(); });
+  if (formOpen) wireForm(key);
+}
+
+function dropFromSel(key){
+  ["lunch","dinner","night"].forEach(s => { if (sel[s] === key) sel[s] = null; });
+  const at = sel.day.indexOf(key);
+  if (at > -1) sel.day.splice(at,1);
+}
+
+function removeItem(key, id){
+  dropFromSel(key);
+  if (id){
+    if (db && id.indexOf("local-") !== 0) db.doc("places/" + id).delete().catch(()=>{});
+    extra = extra.filter(p => p.id !== id);
+  } else {
+    if (hidden.indexOf(key) === -1) hidden.push(key);
+    if (db) db.collection("hidden").add({ key, createdAt:new Date().toISOString() }).catch(()=>{});
+  }
+  if (!db) saveLocal();
+  render();
+}
+
+function restoreItem(key){
+  hidden = hidden.filter(k => k !== key);
+  if (db){
+    db.collection("hidden").where("key","==",key).get()
+      .then(s => s.docs.forEach(d => db.doc("hidden/" + d.id).delete().catch(()=>{})))
+      .catch(()=>{});
+  } else saveLocal();
+  render();
+}
+
+function formHtml(slot, o){
+  const v = o || {};
+  const sv = s => esc(s == null ? "" : s);
+  return `<div class="form">
+    <div class="row">
+      <label>이름<input type="text" id="f-nm" value="${sv(v.nm)}" placeholder="가게·장소 이름"></label>
+      <label>종류<select id="f-k">
+        ${Object.keys(KIND).filter(k=>k!=="none").map(k=>
+          `<option value="${k}"${v.k===k?" selected":""}>${KIND[k]}</option>`).join("")}
+      </select></label>
+    </div>
+    <label>영업시간<input type="text" id="f-h" value="${sv(v.h)}" placeholder="예: 목 11:00–21:00"></label>
+    <label>메모<input type="text" id="f-n" value="${sv(v.n)}" placeholder="예: 예약 권장 / 웨이팅"></label>
+    <div class="row">
+      <label>머무는 시간(분)<input type="text" id="f-dur" inputmode="numeric" value="${v.dur||""}" placeholder="60"></label>
+      <label>이동 시간(분)<input type="text" id="f-m" inputmode="numeric" value="${v.m||""}" placeholder="10"></label>
+    </div>
+    <label>지도 검색어<input type="text" id="f-q" value="${sv(v.q || (o ? searchQ(o, ZONES[sel.zone].id) : ""))}" placeholder="비우면 동네+이름으로 검색"></label>
+    <div class="actions" style="margin-top:2px">
+      <button class="btn ghost" id="f-cancel">취소</button>
+      <button class="btn" id="f-save">${o ? "저장" : esc(SLOTS[slot]) + "에 추가"}</button>
+    </div>
+    <p class="msg" id="f-msg"></p>
+  </div>`;
+}
+
+function closeForm(){ formOpen = false; editKey = null; render(); }
+
+function wireForm(slot){
+  const target = editKey ? findByKey(slot, editKey) : null;
+  $("f-cancel").addEventListener("click", closeForm);
+  $("f-save").addEventListener("click", () => {
+    const nm = $("f-nm").value.trim();
+    if (!nm){ $("f-msg").textContent = "이름을 입력해."; return; }
+    const doc = {
+      zone: ZONES[sel.zone].id, slot, nm,
+      k: $("f-k").value,
+      h: $("f-h").value.trim(),
+      n: $("f-n").value.trim(),
+      dur: Math.max(0, parseInt($("f-dur").value, 10) || 60),
+      m: Math.max(0, parseInt($("f-m").value, 10) || 10),
+      q: $("f-q").value.trim(),
+      createdAt: (target && target.createdAt) || new Date().toISOString()
+    };
+
+    /* 이미 DB에 있는 항목이면 그 자리에서 수정 */
+    if (target && target.id && db && target.id.indexOf("local-") !== 0){
+      $("f-msg").textContent = "저장 중…";
+      db.doc("places/" + target.id).update(doc).then(closeForm).catch(() => {
+        $("f-msg").textContent = "저장 실패.";
+      });
+      return;
+    }
+    if (target && target.id){           // localStorage 항목
+      extra = extra.map(p => p.id === target.id ? Object.assign({ id:target.id }, doc) : p);
+      saveLocal(); closeForm(); return;
+    }
+    /* 기본 목록 항목을 고친 경우 — 원본은 숨기고 고친 내용을 새로 추가 */
+    if (target && !target.id){
+      if (hidden.indexOf(target.key) === -1) hidden.push(target.key);
+      if (db) db.collection("hidden").add({ key:target.key, createdAt:new Date().toISOString() }).catch(()=>{});
+      dropFromSel(target.key);
+    }
+    if (!db){
+      extra.push(Object.assign({ id:"local-" + Date.now() }, doc));
+      saveLocal(); closeForm(); return;
+    }
+    $("f-msg").textContent = "저장 중…";
+    db.collection("places").add(doc).then(closeForm).catch(() => {
+      extra.push(Object.assign({ id:"local-" + Date.now() }, doc));
+      saveLocal(); closeForm();
+    });
+  });
+}
+
+function advance(){
+  step++;
+  if (step >= STEPS.length) renderResult();
+  else { render(); window.scrollTo(0,0); }
+}
+$("back").addEventListener("click", () => { if (step > 0){ step--; formOpen = false; editKey = null; render(); window.scrollTo(0,0); } });
+
+/* ===== result ===== */
+function chosen(){
+  const out = [];
+  const a = findByKey("lunch", sel.lunch); if (a) out.push(a);
+  sel.day.forEach(k => { const o = findByKey("day", k); if (o) out.push(o); });
+  const b = findByKey("dinner", sel.dinner); if (b) out.push(b);
+  const c = findByKey("night", sel.night); if (c) out.push(c);
+  return out;
+}
+
+function buildRows(){
+  const z = ZONES[sel.zone];
+  const rows = [];
+  let t = 12 * 60;
+  rows.push({ t, nm:z.meet, k:"", move:true, meet:true, q:z.meet });
+
+  const seq = [];
+  const L = findByKey("lunch", sel.lunch); if (L) seq.push(L);
+  sel.day.forEach(k => { const o = findByKey("day", k); if (o) seq.push(o); });
+  const mv = MOVIES[sel.movie];
+  if (mv && mv.dur > 0) seq.push({ k:"movie", nm:`${mv.nm} · ${z.cine}`, h:mv.meta, dur:mv.dur, m:z.cm, q:z.cine });
+  const N = findByKey("dinner", sel.dinner); if (N) seq.push(N);
+  const G = findByKey("night", sel.night); if (G && G.dur > 0) seq.push(G);
+
+  seq.forEach((o, idx) => {
+    const mm = idx === 0 ? 10 : (o.m || 0);
+    if (mm > 0){ rows.push({ t, nm:`이동 ${mm}분`, move:true }); t += mm; }
+    rows.push({ t, nm:o.nm, k:o.k, h:o.h, n:o.n, dur:o.dur, u:o.u, q:searchQ(o, z.id) });
+    t += o.dur;
+  });
+  return { rows, end:t, zone:z };
+}
+
+function renderResult(){
+  setAccent(); renderHead();
+  const { rows, end, zone } = buildRows();
+  const tipKeys = [];
+  chosen().forEach(o => { if (o.tip && !tipKeys.includes(o.tip)) tipKeys.push(o.tip); });
+
+  $("count").textContent = "완성";
+  $("prog").style.width = "100%";
+  $("back").style.visibility = "visible";
+
+  $("stage").innerHTML = `
+    <div class="res-head">
+      <div class="zone">${esc(zone.nm)}</div>
+      <h2>${esc(DAY.label)} 하루</h2>
+      <div class="range">12:00 – ${fmt(end)} · 총 ${lenOf(end - 720)}</div>
+    </div>
+    <div class="plan">
+      ${rows.map(r => {
+        const kl = KIND[r.k] || "";
+        const meta = [r.n, r.h, r.dur ? lenOf(r.dur) : ""].filter(Boolean).join(" · ");
+        const link = (r.move && !r.meet) ? "" :
+          `<a class="go" href="${esc(mapUrl(r.q))}" target="_blank" rel="noopener" aria-label="${esc(r.nm)} 지도">↗</a>`;
+        return `<div class="stop${r.move?" is-move":""}">
+          <div class="t">${fmt(r.t)}</div>
+          <div class="rail"><i></i></div>
+          <div>
+            <div class="hd">${kl?`<span class="kind${r.u?" warn":""}">${esc(kl)}</span>`:""}<span class="nm">${esc(r.nm)}</span></div>
+            ${meta?`<div class="meta">${esc(meta)}</div>`:""}
+          </div>
+          <div>${link}</div>
+        </div>`;
+      }).join("")}
+    </div>
+    <div class="tips">
+      ${tipKeys.map(k => `<div class="tip"><span class="k">${TIPS[k].k}</span><div>${TIPS[k].html}</div></div>`).join("")}
+      <div class="tip"><span class="k">영업</span><div>표시된 시간은 <b>평시 정기 영업시간</b>. 몰(타임스퀘어·아이파크몰·IFC몰·메세나폴리스·사러가)은 정상영업, 더현대 서울만 24~25일 휴점.</div></div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="again">처음부터</button>
+      <button class="btn" id="tweak">영화만 바꾸기</button>
+    </div>`;
+
+  $("again").addEventListener("click", () => {
+    sel = blankSel(); step = 0; formOpen = false; editMode = false; editKey = null;
+    render(); window.scrollTo(0,0);
+  });
+  $("tweak").addEventListener("click", () => { step = STEPS.indexOf("movie"); render(); window.scrollTo(0,0); });
+  window.scrollTo(0,0);
+}
+
+/* ===== boot ===== */
+extra  = LS.get("dayplan.extra", []);
+hidden = LS.get("dayplan.hidden", []);
+render();
+
+(window.claude && window.claude.use ? window.claude.use("db") : Promise.resolve(null))
+  .then(store => {
+    if (!store) return;   // DB 없으면 localStorage로 계속
+    db = store;
+    extra = []; hidden = [];
+    db.doc("meta/day").onSnapshot(
+      snap => {
+        const d = snap && snap.data && snap.data();
+        if (d && (d.label || d.weather)){
+          DAY = { label:d.label || DAY_FALLBACK.label, weather:d.weather || DAY_FALLBACK.weather };
+          if (step >= STEPS.length) renderResult(); else render();
+        }
+      }, () => {});
+    db.collection("places").orderBy("createdAt").onSnapshot(
+      snap => {
+        extra = snap.docs.map(d => Object.assign({ id:d.id }, d.data() || {}));
+        if (step < STEPS.length) render();
+      }, () => {});
+    db.collection("hidden").onSnapshot(
+      snap => {
+        hidden = snap.docs.map(d => (d.data() || {}).key).filter(Boolean);
+        if (step < STEPS.length) render();
+      }, () => {});
+  })
+  .catch(() => {});
+
+if (window.matchMedia) {
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+    if (step >= STEPS.length) renderResult(); else render();
+  });
+}
+</script>
